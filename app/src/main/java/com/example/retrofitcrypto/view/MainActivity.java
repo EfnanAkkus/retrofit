@@ -1,8 +1,10 @@
-package com.example.retrofitcrypto;
+package com.example.retrofitcrypto.view;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+
+import com.example.retrofitcrypto.R;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -13,5 +15,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         //https://api.nomics.com/v1/prices?key=22e5d080aaa594236172d8a53358051b
+
+
     }
 }
