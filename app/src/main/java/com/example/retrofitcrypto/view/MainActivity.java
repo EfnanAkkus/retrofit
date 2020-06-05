@@ -1,6 +1,8 @@
 package com.example.retrofitcrypto.view;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -10,6 +12,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import android.os.Bundle;
 
 import com.example.retrofitcrypto.R;
+import com.example.retrofitcrypto.adaptor.RecyclerViewAdaptor;
 import com.example.retrofitcrypto.model.CryptoModel;
 import com.example.retrofitcrypto.service.CryptoAPI;
 import com.google.gson.Gson;
@@ -22,6 +25,8 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<CryptoModel> cryptoModels;
     private String BASE_URL = "https://api.nomics.com/v1/";
     Retrofit retrofit;
+    RecyclerView recyclerView;
+    RecyclerViewAdaptor recyclerViewAdaptor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,8 +53,11 @@ public class MainActivity extends AppCompatActivity {
             public void onResponse(Call<List<CryptoModel>> call, Response<List<CryptoModel>> response) {
                 if (response.isSuccessful()) {
                     List<CryptoModel> responseList = response.body();
-                    cryptoModels=new ArrayList<>(responseList);
-
+                    cryptoModels = new ArrayList<>(responseList);
+//recyclerview burda olması lazım çünkü call yaparak aldığımız verileri aldıktan sonra recyclerview'de göstereceğiz
+                    recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
+                    recyclerViewAdaptor=new RecyclerViewAdaptor(cryptoModels);
+                    recyclerView.setAdapter(recyclerViewAdaptor);
                 }
             }
 
