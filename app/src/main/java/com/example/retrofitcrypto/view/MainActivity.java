@@ -3,10 +3,14 @@ package com.example.retrofitcrypto.view;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.schedulers.Schedulers;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
+import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 import android.os.Bundle;
@@ -28,6 +32,8 @@ public class MainActivity extends AppCompatActivity {
     RecyclerView recyclerView;
     RecyclerViewAdaptor recyclerViewAdaptor;
 
+    CompositeDisposable compositeDisposable;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
         Gson gson = new GsonBuilder().setLenient().create();//gson'ı oluşturuyor
         retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .addConverterFactory(GsonConverterFactory.create(gson))//gelen gson'ı serialized namedeki gibi alacağını retrofite'de bildirmemiz gerekiyor
                 .build();
         loadData();
@@ -45,9 +52,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadData() {
-        CryptoAPI cryptoAPI = retrofit.create(CryptoAPI.class);//veriyi yükleyebilmek için interface'den obje üretmemiz lazım
+        final CryptoAPI cryptoAPI = retrofit.create(CryptoAPI.class);//veriyi yükleyebilmek için interface'den obje üretmemiz lazım
+
+        compositeDisposable = new CompositeDisposable();
+        compositeDisposable.add(cryptoAPI.getData()
+                .subscribeOn(Schedulers.io())//hangi threat'te bu gözlemleme kayıt alma işlemlerinin yapılacağını
+                .observeOn(AndroidSchedulers.mainThread())//aldığımız veriyi hangi threat'te gözlemleyeceğiz
+                .subscribe(this::handleResponse));//ortaya çıkan veriyi nerde ele alacağız call kullanırken onResponse falan vardı burda da bu var
+
+
         //servis oluşmuş oldu artıl call ile veriyi çekebiliriz
-        Call<List<CryptoModel>> call = cryptoAPI.getData();
+       /* Call<List<CryptoModel>> call = cryptoAPI.getData();
         call.enqueue(new Callback<List<CryptoModel>>() {
             @Override
             public void onResponse(Call<List<CryptoModel>> call, Response<List<CryptoModel>> response) {
@@ -66,9 +81,21 @@ public class MainActivity extends AppCompatActivity {
                 t.printStackTrace();
             }
         });
-
+*/
 
     }
 
+    private void handleResponse(List<CryptoModel> cryptoModelList) {
+        cryptoModels = new ArrayList<>(cryptoModelList);
+//recyclerview burda olması lazım çünkü call yaparak aldığımız verileri aldıktan sonra recyclerview'de göstereceğiz
+        recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
+        recyclerViewAdaptor=new RecyclerViewAdaptor(cryptoModels);
+        recyclerView.setAdapter(recyclerViewAdaptor);
+    }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        compositeDisposable.clear();//yukarıdaki activite bittiğinde eklenen tüm api call'larının hepsini temizleme işlemi bir kereden yapılır
+    }
 }

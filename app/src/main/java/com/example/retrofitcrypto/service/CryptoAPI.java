@@ -4,6 +4,7 @@ import com.example.retrofitcrypto.model.CryptoModel;
 
 import java.util.List;
 
+import io.reactivex.Observable;
 import retrofit2.Call;
 import retrofit2.http.GET;
 
@@ -15,6 +16,6 @@ public interface CryptoAPI {
 
     @GET("https://api.nomics.com/v1/prices?key")
 //GET işlemini hangi metod ile yapmamız gerektiğini söylüyoruz
-    Call<List<CryptoModel>> getData();//bir liste içinde crypto model gelecek
-
+   // Call<List<CryptoModel>> getData();//bir liste içinde crypto model gelecek
+    Observable<List<CryptoModel>> getData();
 }
